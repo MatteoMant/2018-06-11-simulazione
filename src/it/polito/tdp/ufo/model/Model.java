@@ -1,5 +1,6 @@
 package it.polito.tdp.ufo.model;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +17,9 @@ public class Model {
 	private SightingsDAO dao;
 	private Graph<String, DefaultEdge> grafo;
 	
+	// Variabili per la ricorsione
+	private List<String> best;
+	
 	public Model() {
 		dao = new SightingsDAO();
 	}
@@ -27,6 +31,7 @@ public class Model {
 		Graphs.addAllVertices(this.grafo, dao.getAllStatiByAnno(anno));
 		
 		// Aggiunta degli archi
+		// SOLUZIONE POCO OTTIMALE
 		for (String v1 : this.grafo.vertexSet()) {
 			for (String v2 : this.grafo.vertexSet()) {
 				if (!v1.equals(v2)) {
@@ -37,6 +42,43 @@ public class Model {
 			}
 		}
 		
+		/*  SOLUZIONE PIU EFFICIENTE
+		 * 
+		 *  SELECT s1.state, s2.state
+			FROM sighting s1, sighting s2
+			WHERE YEAR(s1.datetime) = YEAR(s2.datetime) AND YEAR(s1.datetime) = 2007 AND s1.country = 'us'
+			AND s2.country = 'us' AND s2.datetime > s1.datetime AND s1.state <> s2.state
+			GROUP BY s1.state, s2.state
+		 */
+		
+	}
+	
+	public List<String> calcolaCammino(String partenza){
+		best = new LinkedList<>();
+		
+		List<String> parziale = new LinkedList<>();
+		parziale.add(partenza);
+		
+		cerca(parziale);
+		
+		return best;
+	}
+	
+	private void cerca(List<String> parziale) {
+		String ultimo = parziale.get(parziale.size()-1);
+		
+		if (parziale.size() > best.size()) {
+			best = new LinkedList<>(parziale);
+		}
+		
+		// cerchiamo di aggiungere un nuovo vertice
+		for (String s : Graphs.successorListOf(this.grafo, ultimo)) {
+			if (!parziale.contains(s)) {
+				parziale.add(s);
+				cerca(parziale);
+				parziale.remove(parziale.size()-1); // parziale.remove(s); 
+			}
+		}
 	}
 	
 	public List<String> getStatiPrecedenti(String stato) {

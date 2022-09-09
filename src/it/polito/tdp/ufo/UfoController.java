@@ -42,6 +42,8 @@ public class UfoController {
     	List<String> precedenti = this.model.getStatiPrecedenti(stato);
     	List<String> successivi = this.model.getStatiSuccessivi(stato);
     	Set<String> componenteConnessa = this.model.getComponenteConnessa(stato);
+    	componenteConnessa.remove(stato);
+    	
     	txtResult.appendText("STATI PRECEDENTI: \n");
     	txtResult.appendText(precedenti + "\n");
     	
@@ -77,7 +79,14 @@ public class UfoController {
 
     @FXML
     void handleSequenza(ActionEvent event) {
-
+    	String stato = boxStato.getValue();
+    	if (stato == null) {
+    		txtResult.setText("Per favore selezionare uno stato dalla tendina!");
+    		return;
+    	}
+    	List<String> cammino = this.model.calcolaCammino(stato);
+    	txtResult.appendText("Il cammino trovato vale: \n");
+    	txtResult.appendText(cammino + "");
     }
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
